@@ -51,7 +51,7 @@ export default function DashboardPage() {
       <div className="dash-header">
         <div>
           <p className="dash-saludo">{saludo},</p>
-          <h1 className="dash-nombre">{user?.nombre?.split(' ')[0]} <span>👋</span></h1>
+          <h1 className="dash-nombre">{user?.nombre?.split(' ')[0]} </h1>
           <p className="dash-rol">Acceso como <strong>{user?.cargo?.replace(/_/g, ' ')}</strong></p>
         </div>
         <div className="dash-date">
@@ -97,7 +97,6 @@ export default function DashboardPage() {
         </>
       )}
 
-      {/* Membresías por vencer */}
       {(isAdmin() || isRecepcionista()) && vencer.length > 0 && (
         <div className="dash-alert-section">
           <div className="dash-section-title">
@@ -121,10 +120,9 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Info del sistema */}
       <div className="dash-info-grid">
         <div className="dash-info-card">
-          <h3>🏋️ Sistema de Gestión</h3>
+          <h3>Sistema de Gestión</h3>
           <p>Universidad El Bosque · Bases de Datos 1</p>
           <p style={{ marginTop: 8 }}>Gestiona miembros, membresías, clases, reservas, salas y mantenimientos desde un solo lugar.</p>
         </div>

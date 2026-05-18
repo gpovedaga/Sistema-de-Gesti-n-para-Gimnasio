@@ -1,21 +1,8 @@
-/* ─────────────────────────────────────────────────────────────────
-   Common UI Components
-   - PageHeader
-   - StatCard
-   - DataTable
-   - Badge
-   - Modal
-   - FormInput / FormSelect
-   - ConfirmDialog
-   - EmptyState
-   - Spinner
-───────────────────────────────────────────────────────────────── */
 import { useState } from 'react'
 import { X, AlertTriangle, Search } from 'lucide-react'
 import './Common.css'
 import { createPortal } from 'react-dom'   // ← agrega esto
 
-/* ── PageHeader ───────────────────────────────────────────────── */
 export function PageHeader({ title, subtitle, action }) {
   return (
     <div className="page-header">
@@ -28,7 +15,6 @@ export function PageHeader({ title, subtitle, action }) {
   )
 }
 
-/* ── StatCard ─────────────────────────────────────────────────── */
 export function StatCard({ title, value, icon: Icon, color = 'var(--accent)', trend }) {
   return (
     <div className="stat-card animate-fade">
@@ -44,7 +30,6 @@ export function StatCard({ title, value, icon: Icon, color = 'var(--accent)', tr
   )
 }
 
-/* ── Badge ────────────────────────────────────────────────────── */
 const BADGE_COLORS = {
   activo:           { bg:'#22c55e20', color:'#22c55e', border:'#22c55e40' },
   activa:           { bg:'#22c55e20', color:'#22c55e', border:'#22c55e40' },
@@ -72,7 +57,6 @@ export function Badge({ value }) {
   )
 }
 
-/* ── DataTable ────────────────────────────────────────────────── */
 export function DataTable({ columns, data, loading, searchable = true }) {
   const [search, setSearch] = useState('')
 
@@ -126,7 +110,6 @@ export function DataTable({ columns, data, loading, searchable = true }) {
   )
 }
 
-/* ── Modal ────────────────────────────────────────────────────── */
 export function Modal({ open, onClose, title, children, width = 520 }) {
   if (!open) return null
   return createPortal(           // ← envuelve con portal
@@ -139,11 +122,10 @@ export function Modal({ open, onClose, title, children, width = 520 }) {
         <div className="modal-body">{children}</div>
       </div>
     </div>,
-    document.body               // ← se monta directo en el body
+    document.body               
   )
 }
 
-/* ── ConfirmDialog ────────────────────────────────────────────── */
 export function ConfirmDialog({ open, onClose, onConfirm, message = '¿Estás seguro?' }) {
   if (!open) return null
   return createPortal(
@@ -161,7 +143,6 @@ export function ConfirmDialog({ open, onClose, onConfirm, message = '¿Estás se
   )
 }
 
-/* ── FormInput ────────────────────────────────────────────────── */
 export function FormInput({ label, error, ...props }) {
   return (
     <div className="form-group">
@@ -172,7 +153,6 @@ export function FormInput({ label, error, ...props }) {
   )
 }
 
-/* ── FormSelect ───────────────────────────────────────────────── */
 export function FormSelect({ label, error, options, ...props }) {
   return (
     <div className="form-group">
@@ -188,7 +168,6 @@ export function FormSelect({ label, error, options, ...props }) {
   )
 }
 
-/* ── ActionButton ─────────────────────────────────────────────── */
 export function ActionBtn({ onClick, variant = 'edit', icon: Icon, label }) {
   return (
     <button className={`action-btn action-btn--${variant}`} onClick={onClick} title={label}>
@@ -198,12 +177,10 @@ export function ActionBtn({ onClick, variant = 'edit', icon: Icon, label }) {
   )
 }
 
-/* ── Spinner ──────────────────────────────────────────────────── */
 export function Spinner() {
   return <div className="spinner" />
 }
 
-/* ── Button ───────────────────────────────────────────────────── */
 export function Button({ children, variant = 'primary', loading, icon: Icon, ...props }) {
   return (
     <button className={`btn btn-${variant}`} disabled={loading} {...props}>

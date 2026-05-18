@@ -45,7 +45,6 @@ export default function Layout() {
 
   return (
     <div className="layout">
-      {/* ── SIDEBAR ── */}
       <aside className="sidebar">
         <div className="sidebar-logo">
           <Zap size={22} className="logo-icon" />
@@ -86,7 +85,6 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* ── MAIN ── */}
       <main className="main-content">
         <div className="page-wrapper">
           <Outlet />

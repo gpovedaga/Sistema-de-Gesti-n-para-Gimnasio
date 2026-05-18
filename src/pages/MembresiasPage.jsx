@@ -4,23 +4,32 @@ import { PageHeader, DataTable, Badge, Modal, ConfirmDialog, FormInput, FormSele
 import { membresiaService, miembroService, planService, pagoService } from '../services/api'
 
 const ESTADO_OPTS = [
-  { value: 'activa', label: 'Activa' },
-  { value: 'vencida', label: 'Vencida' },
+  { value: 'activa',    label: 'Activa' },
+  { value: 'vencida',   label: 'Vencida' },
   { value: 'cancelada', label: 'Cancelada' },
+]
+const METODO_OPTS = [
+  { value: 'efectivo',      label: 'Efectivo' },
+  { value: 'tarjeta',       label: 'Tarjeta' },
+  { value: 'transferencia', label: 'Transferencia bancaria' },
 ]
 const EMPTY = { miembroDocumento: '', planIdPlan: '', fechaInicio: '' }
 
 export default function MembresiasPage() {
-  const [data, setData] = useState([])
-  const [miembros, setMiembros] = useState([])
-  const [planes, setPlanes] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [modal, setModal] = useState(false)
-  const [confirm, setConfirm] = useState(null)
-  const [form, setForm] = useState(EMPTY)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [planesData, setPlanesData] = useState([])  // ← agregar este estado
+  const [data,       setData]       = useState([])
+  const [miembros,   setMiembros]   = useState([])
+  const [planes,     setPlanes]     = useState([])
+  const [planesData, setPlanesData] = useState([])
+  const [loading,    setLoading]    = useState(true)
+  const [modal,      setModal]      = useState(false)
+  const [confirm,    setConfirm]    = useState(null)
+  const [form,       setForm]       = useState(EMPTY)
+  const [saving,     setSaving]     = useState(false)
+  const [error,      setError]      = useState('')
+
+  const [tipoPago,      setTipoPago]      = useState('total')   
+  const [montoPago,     setMontoPago]     = useState('')
+  const [metodoPago,    setMetodoPago]    = useState('efectivo')
 
   useEffect(() => { fetchAll() }, [])
 
@@ -32,82 +41,93 @@ export default function MembresiasPage() {
         miembroService.listar(),
         planService.listar(),
       ])
-      setData(miem.data)
       setMiembros(miem.data.map(m => ({ value: m.documento, label: `${m.nombreCompleto} (${m.documento})` })))
       setPlanes(plan.data.map(p => ({ value: p.idPlan, label: `${p.nombre} - $${Number(p.precioCop).toLocaleString('es-CO')} (${p.duracionDias} días)` })))
-      setPlanesData(plan.data)  // ← agregar esta línea después de setPlanes
+      setPlanesData(plan.data)
       setData(mem.data)
     } finally { setLoading(false) }
+  }
+
+  const handlePlan = (e) => {
+    const id = e.target.value
+    setForm(f => ({ ...f, planIdPlan: id }))
+    const plan = planesData.find(p => p.idPlan == id)
+    if (plan) setMontoPago(plan.precioCop)
+  }
+
+  const openModal = () => {
+    setForm(EMPTY)
+    setTipoPago('total')
+    setMontoPago('')
+    setMetodoPago('efectivo')
+    setError('')
+    setModal(true)
   }
 
   const save = async e => {
     e.preventDefault(); setSaving(true); setError('')
     try {
-      const res = await membresiaService.crear(form)
+      await membresiaService.crear(form)
 
-      // Buscar el precio del plan seleccionado
-      const planSeleccionado = planes.find(p => p.value == form.planIdPlan)
-      // Extraer el precio del label "Plan Mensual - $80.000 (30 días)"
-      // O buscarlo desde los datos de planes cargados
-      const planData = planesData.find(p => p.idPlan == form.planIdPlan)
-
-      // Crear pago automático
-      // Necesitamos el idMembresia recién creada — buscamos en la lista actualizada
       const membresiasActualizadas = await membresiaService.listar()
       const nuevaMembresia = membresiasActualizadas.data
         .filter(m => m.miembroDocumento === form.miembroDocumento)
         .sort((a, b) => b.idMembresia - a.idMembresia)[0]
 
-      if (nuevaMembresia) {
+      if (nuevaMembresia && tipoPago !== 'sin_pago') {
         await pagoService.crear({
           membresiaIdMembresia: nuevaMembresia.idMembresia,
-          fechaPago: form.fechaInicio,
-          montoCop: nuevaMembresia.precioInscrito,
-          metodoPago: 'efectivo'
+          fechaPago:            form.fechaInicio,
+          montoCop:             tipoPago === 'total' ? nuevaMembresia.precioInscrito : Number(montoPago),
+          metodoPago:           metodoPago
         })
       }
 
       setModal(false); fetchAll()
     } catch (err) {
-      setError(err.response?.data || 'Error al crear.')
+      setError(err.response?.data?.message || err.response?.data || 'Error al crear.')
     } finally { setSaving(false) }
   }
 
   const cambiarEstado = async (id, estado) => {
-    try { await membresiaService.cambiarEstado(id, estado); fetchAll() } catch { }
+    try { await membresiaService.cambiarEstado(id, estado); fetchAll() } catch {}
   }
+
   const renovar = async (id) => {
     try {
       await membresiaService.renovar(id)
-      // Generar pago automático
       const memActualizada = await membresiaService.buscar(id)
       await pagoService.crear({
         membresiaIdMembresia: id,
-        fechaPago: new Date().toISOString().split('T')[0],
-        montoCop: memActualizada.data.precioInscrito,
-        metodoPago: 'efectivo'
+        fechaPago:            new Date().toISOString().split('T')[0],
+        montoCop:             memActualizada.data.precioInscrito,
+        metodoPago:           'efectivo'
       })
       fetchAll()
     } catch {
       alert('Error al renovar la membresía.')
     }
   }
-  const del = async () => { try { await membresiaService.eliminar(confirm); fetchAll() } finally { setConfirm(null) } }
+
+  const del = async () => {
+    try { await membresiaService.eliminar(confirm); fetchAll() } finally { setConfirm(null) }
+  }
+
+  const precioplan = planesData.find(p => p.idPlan == form.planIdPlan)?.precioCop || 0
 
   const cols = [
-    { key: 'idMembresia', label: 'ID', width: 60 },
+    { key: 'idMembresia',   label: 'ID',      width: 60 },
     { key: 'miembroNombre', label: 'Miembro' },
-    { key: 'planNombre', label: 'Plan', width: 140 },
+    { key: 'planNombre',    label: 'Plan',    width: 140 },
     { key: 'precioInscrito', label: 'Precio', width: 120, render: r => `$ ${Number(r.precioInscrito).toLocaleString('es-CO')}` },
-    { key: 'fechaInicio', label: 'Inicio', width: 110 },
-    { key: 'fechaFin', label: 'Fin', width: 110 },
+    { key: 'fechaInicio',   label: 'Inicio',  width: 110 },
+    { key: 'fechaFin',      label: 'Fin',     width: 110 },
     { key: 'estado', label: 'Estado', width: 110, render: r => <Badge value={r.estado} /> },
     {
       key: 'acciones', label: '', width: 160, render: r => (
         <div className="table-actions">
           <select className="form-input" style={{ padding: '4px 8px', fontSize: 11, width: 'auto' }}
-            value={r.estado}
-            onChange={e => cambiarEstado(r.idMembresia, e.target.value)}>
+            value={r.estado} onChange={e => cambiarEstado(r.idMembresia, e.target.value)}>
             {ESTADO_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
           {r.estado === 'vencida' && (
@@ -126,7 +146,7 @@ export default function MembresiasPage() {
       <PageHeader
         title="MEMBRESÍAS"
         subtitle={`${data.filter(m => m.estado === 'activa').length} activas · ${data.length} total`}
-        action={<Button icon={Plus} onClick={() => { setForm(EMPTY); setError(''); setModal(true) }}>Nueva membresía</Button>}
+        action={<Button icon={Plus} onClick={openModal}>Nueva membresía</Button>}
       />
       <DataTable columns={cols} data={data} loading={loading} />
 
@@ -134,11 +154,87 @@ export default function MembresiasPage() {
         {error && <div className="form-error" style={{ marginBottom: 12 }}>{error}</div>}
         <form onSubmit={save}>
           <div className="form-grid form-grid--1">
-            <FormSelect label="Miembro *" value={form.miembroDocumento} onChange={e => setForm(f => ({ ...f, miembroDocumento: e.target.value }))} options={miembros} required />
-            <FormSelect label="Plan *" value={form.planIdPlan} onChange={e => setForm(f => ({ ...f, planIdPlan: e.target.value }))} options={planes} required />
-            <FormInput label="Fecha de inicio *" type="date" value={form.fechaInicio} onChange={e => setForm(f => ({ ...f, fechaInicio: e.target.value }))} required />
+            <FormSelect label="Miembro *" value={form.miembroDocumento}
+              onChange={e => setForm(f => ({ ...f, miembroDocumento: e.target.value }))}
+              options={miembros} required />
+            <FormSelect label="Plan *" value={form.planIdPlan}
+              onChange={handlePlan} options={planes} required />
+            <FormInput label="Fecha de inicio *" type="date" value={form.fechaInicio}
+              onChange={e => setForm(f => ({ ...f, fechaInicio: e.target.value }))} required />
           </div>
-          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>La fecha de fin y el precio se calculan automáticamente según el plan.</p>
+
+          {form.planIdPlan && (
+            <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 8,
+              background: 'var(--surface-2, #1a1a2e)', border: '1px solid var(--border)' }}>
+              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 12 }}>
+                Pago inicial — Total: <span style={{ color: 'var(--accent)' }}>
+                  ${Number(precioplan).toLocaleString('es-CO')} COP
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                {[
+                  { id: 'total',    label: 'Pago total' },
+                  { id: 'parcial',  label: 'Pago parcial' },
+                  { id: 'sin_pago', label: 'Sin pago ahora' },
+                ].map(({ id, label }) => (
+                  <button key={id} type="button"
+                    onClick={() => {
+                      setTipoPago(id)
+                      if (id === 'total') setMontoPago(precioplan)
+                      if (id === 'parcial') setMontoPago('')
+                    }}
+                    style={{
+                      flex: 1, padding: '7px 0', borderRadius: 8, border: 'none',
+                      cursor: 'pointer', fontWeight: 600, fontSize: 12,
+                      background: tipoPago === id ? 'var(--accent, #ff4d00)' : 'var(--surface, #111)',
+                      color: tipoPago === id ? '#fff' : 'var(--text-secondary, #888)',
+                      outline: tipoPago === id ? 'none' : '1px solid var(--border)'
+                    }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {tipoPago !== 'sin_pago' && (
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label className="form-label">
+                      {tipoPago === 'parcial' ? 'Monto a pagar ahora *' : 'Monto'}
+                    </label>
+                    <input className="form-input" type="number" value={montoPago}
+                      onChange={e => setMontoPago(e.target.value)}
+                      readOnly={tipoPago === 'total'}
+                      required={tipoPago === 'parcial'}
+                      style={{ background: tipoPago === 'total' ? 'var(--surface-2)' : undefined }} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Método de pago</label>
+                    <select className="form-input" value={metodoPago}
+                      onChange={e => setMetodoPago(e.target.value)}>
+                      {METODO_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {tipoPago === 'sin_pago' && (
+                <p style={{ fontSize: 12, color: '#f59e0b' }}>
+                  La membresía se creará sin pago. Podrás registrarlo después en la sección de Pagos.
+                </p>
+              )}
+              {tipoPago === 'parcial' && montoPago && Number(montoPago) < Number(precioplan) && (
+                <p style={{ fontSize: 12, color: '#f59e0b', marginTop: 8 }}>
+                  Pendiente: ${(Number(precioplan) - Number(montoPago)).toLocaleString('es-CO')} COP.
+                  Registra el saldo restante en la sección de Pagos.
+                </p>
+              )}
+            </div>
+          )}
+
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>
+            La fecha de fin y el precio se calculan automáticamente según el plan.
+          </p>
           <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
             <Button variant="ghost" type="button" onClick={() => setModal(false)}>Cancelar</Button>
             <Button type="submit" loading={saving}>Crear membresía</Button>
@@ -146,7 +242,8 @@ export default function MembresiasPage() {
         </form>
       </Modal>
 
-      <ConfirmDialog open={!!confirm} onClose={() => setConfirm(null)} onConfirm={del} message="¿Eliminar esta membresía?" />
+      <ConfirmDialog open={!!confirm} onClose={() => setConfirm(null)} onConfirm={del}
+        message="¿Eliminar esta membresía?" />
     </div>
   )
 }

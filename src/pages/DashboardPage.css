@@ -1,116 +1,97 @@
+.dashboard { animation: fadeUp 0.4s ease forwards; }
+
 .dash-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 32px;
+  margin-bottom: 36px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
   gap: 16px;
 }
 
 .dash-saludo {
-  font-size: 14px;
-  color: var(--text-muted);
-  letter-spacing: 1px;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 3px;
   text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
 }
 
 .dash-nombre {
   font-family: var(--font-display);
-  font-size: 48px;
-  letter-spacing: 2px;
+  font-size: 52px;
+  letter-spacing: 3px;
   color: var(--text-primary);
   line-height: 1;
-  margin-top: 4px;
+  margin-bottom: 6px;
 }
 
 .dash-rol {
-  font-size: 13px;
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
   color: var(--text-secondary);
-  margin-top: 6px;
+  text-transform: uppercase;
 }
-
-.dash-rol strong { color: var(--accent); text-transform: capitalize; }
+.dash-rol strong { color: var(--accent); }
 
 .dash-date {
-  font-size: 13px;
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
   color: var(--text-muted);
+  text-transform: uppercase;
   text-align: right;
   padding-top: 8px;
-  text-transform: capitalize;
 }
 
-/* ── Alert section ── */
-.dash-alert-section {
-  background: rgba(245,158,11,0.05);
-  border: 1px solid rgba(245,158,11,0.2);
-  border-radius: var(--radius-md);
-  padding: 20px;
-  margin-bottom: 24px;
-}
+/* Vencer section */
+.vencer-section { margin-top: 32px; }
 
-.dash-section-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--warning);
+.vencer-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  letter-spacing: 2px;
+  color: var(--text-primary);
   margin-bottom: 16px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
 }
 
-.vencer-list { display: flex; flex-direction: column; gap: 8px; }
-
-.vencer-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px 14px;
+.vencer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 12px;
 }
 
-.vencer-info { display: flex; flex-direction: column; gap: 2px; }
-.vencer-nombre { font-size: 14px; font-weight: 600; color: var(--text-primary); }
-.vencer-plan   { font-size: 12px; color: var(--text-muted); }
-
-.vencer-fecha {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-.vencer-fecha strong { color: var(--warning); font-size: 13px; }
-
-/* ── Info cards ── */
-.dash-info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-  margin-top: 8px;
-}
-
-.dash-info-card {
+.vencer-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
+  border-left: 3px solid var(--warning);
   border-radius: var(--radius-md);
-  padding: 20px 22px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.dash-info-card h3 {
-  font-size: 15px;
-  font-weight: 600;
+.vencer-name {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 8px;
+  letter-spacing: 0.5px;
 }
 
-.dash-info-card p {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.6;
+.vencer-date {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--warning);
+  text-transform: uppercase;
 }

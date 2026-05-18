@@ -37,7 +37,6 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* ── BUG 1 y 2 CORREGIDOS: rutas públicas con paths correctos ── */}
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/registro" element={<RegisterPage />} />  {/* era /register */}
@@ -45,7 +44,6 @@ export default function App() {
             <ProtectedRoute roles={['miembro']}><PortalMiembroPage /></ProtectedRoute>
           } />
 
-          {/* ── BUG 5 CORREGIDO: dashboard dentro del Layout con sidebar ── */}
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route path="dashboard" element={<DashboardPage />} />
 
@@ -64,7 +62,6 @@ export default function App() {
             <Route path="planes"
               element={<ProtectedRoute roles={['administrador']}><PlanesPage /></ProtectedRoute>} />
 
-            {/* ── BUG 3 CORREGIDO: salas también para tecnico_mantenimiento ── */}
             <Route path="salas"
               element={<ProtectedRoute roles={['administrador', 'tecnico_mantenimiento']}><SalasPage /></ProtectedRoute>} />
             <Route path="equipos"

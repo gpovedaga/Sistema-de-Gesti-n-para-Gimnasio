@@ -55,7 +55,6 @@ export default function MantenimientosPage() {
         .map(e => ({ value: e.idEmpleado, label: e.nombreCompleto }))
       )
 
-      // Si es técnico, autocompletar su propio ID
       if (isTecnico()) {
         const yo = empData.find(e => e.correo === user.correo)
         if (yo) setMiIdEmpleado(yo.idEmpleado)
@@ -141,7 +140,7 @@ export default function MantenimientosPage() {
       <PageHeader
         title="MANTENIMIENTOS"
         subtitle={`${data.length} registros · Total: $ ${totalCosto.toLocaleString('es-CO')} COP`}
-        action={<Button icon={Plus} onClick={openCreate}>Registrar mantenimiento</Button>}
+        action={<Button icon={Plus} onClick={openCreate} disabled={loading}>Registrar mantenimiento</Button>}
       />
 
       <DataTable columns={cols} data={data} loading={loading} />
