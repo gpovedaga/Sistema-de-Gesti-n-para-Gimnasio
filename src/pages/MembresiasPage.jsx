@@ -27,9 +27,9 @@ export default function MembresiasPage() {
   const [saving,     setSaving]     = useState(false)
   const [error,      setError]      = useState('')
 
-  const [tipoPago,      setTipoPago]      = useState('total')   
-  const [montoPago,     setMontoPago]     = useState('')
-  const [metodoPago,    setMetodoPago]    = useState('efectivo')
+  const [tipoPago,   setTipoPago]   = useState('total')
+  const [montoPago,  setMontoPago]  = useState('')
+  const [metodoPago, setMetodoPago] = useState('efectivo')
 
   useEffect(() => { fetchAll() }, [])
 
@@ -164,14 +164,30 @@ export default function MembresiasPage() {
           </div>
 
           {form.planIdPlan && (
-            <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 8,
-              background: 'var(--surface-2, #1a1a2e)', border: '1px solid var(--border)' }}>
-              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 12 }}>
-                Pago inicial — Total: <span style={{ color: 'var(--accent)' }}>
+            <div style={{
+              marginTop: 16,
+              padding: '14px 16px',
+              borderRadius: 8,
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              borderLeft: '3px solid var(--accent)',
+            }}>
+              <div style={{
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 700,
+                fontSize: 12,
+                letterSpacing: '1px',
+                textTransform: 'uppercase',
+                color: 'var(--text-secondary)',
+                marginBottom: 12,
+              }}>
+                Pago inicial —{' '}
+                <span style={{ color: 'var(--accent)' }}>
                   ${Number(precioplan).toLocaleString('es-CO')} COP
                 </span>
               </div>
 
+              {/* Tipo de pago buttons */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
                 {[
                   { id: 'total',    label: 'Pago total' },
@@ -181,15 +197,24 @@ export default function MembresiasPage() {
                   <button key={id} type="button"
                     onClick={() => {
                       setTipoPago(id)
-                      if (id === 'total') setMontoPago(precioplan)
+                      if (id === 'total')   setMontoPago(precioplan)
                       if (id === 'parcial') setMontoPago('')
                     }}
                     style={{
-                      flex: 1, padding: '7px 0', borderRadius: 8, border: 'none',
-                      cursor: 'pointer', fontWeight: 600, fontSize: 12,
-                      background: tipoPago === id ? 'var(--accent, #ff4d00)' : 'var(--surface, #111)',
-                      color: tipoPago === id ? '#fff' : 'var(--text-secondary, #888)',
-                      outline: tipoPago === id ? 'none' : '1px solid var(--border)'
+                      flex: 1,
+                      padding: '7px 0',
+                      borderRadius: 8,
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontFamily: 'var(--font-heading)',
+                      fontWeight: 700,
+                      fontSize: 11,
+                      letterSpacing: '0.8px',
+                      textTransform: 'uppercase',
+                      transition: 'all 0.15s ease',
+                      background: tipoPago === id ? 'var(--accent)' : 'var(--surface)',
+                      color:      tipoPago === id ? 'var(--bg-main)' : 'var(--text-muted)',
+                      outline:    tipoPago === id ? 'none' : '1px solid var(--border)',
                     }}>
                     {label}
                   </button>
@@ -202,11 +227,18 @@ export default function MembresiasPage() {
                     <label className="form-label">
                       {tipoPago === 'parcial' ? 'Monto a pagar ahora *' : 'Monto'}
                     </label>
-                    <input className="form-input" type="number" value={montoPago}
+                    <input
+                      className="form-input"
+                      type="number"
+                      value={montoPago}
                       onChange={e => setMontoPago(e.target.value)}
                       readOnly={tipoPago === 'total'}
                       required={tipoPago === 'parcial'}
-                      style={{ background: tipoPago === 'total' ? 'var(--surface-2)' : undefined }} />
+                      style={{
+                        background: tipoPago === 'total' ? 'var(--surface)' : undefined,
+                        color:      tipoPago === 'total' ? 'var(--text-muted)' : undefined,
+                      }}
+                    />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Método de pago</label>
@@ -219,22 +251,44 @@ export default function MembresiasPage() {
               )}
 
               {tipoPago === 'sin_pago' && (
-                <p style={{ fontSize: 12, color: '#f59e0b' }}>
+                <p style={{
+                  fontFamily: 'var(--font-heading)',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  letterSpacing: '0.5px',
+                  color: 'var(--warning)',
+                }}>
                   La membresía se creará sin pago. Podrás registrarlo después en la sección de Pagos.
                 </p>
               )}
+
               {tipoPago === 'parcial' && montoPago && Number(montoPago) < Number(precioplan) && (
-                <p style={{ fontSize: 12, color: '#f59e0b', marginTop: 8 }}>
-                  Pendiente: ${(Number(precioplan) - Number(montoPago)).toLocaleString('es-CO')} COP.
+                <p style={{
+                  fontFamily: 'var(--font-heading)',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  letterSpacing: '0.5px',
+                  color: 'var(--warning)',
+                  marginTop: 8,
+                }}>
+                  Pendiente: ${(Number(precioplan) - Number(montoPago)).toLocaleString('es-CO')} COP.{' '}
                   Registra el saldo restante en la sección de Pagos.
                 </p>
               )}
             </div>
           )}
 
-          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>
+          <p style={{
+            fontFamily: 'var(--font-heading)',
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: '0.5px',
+            color: 'var(--text-muted)',
+            marginTop: 8,
+          }}>
             La fecha de fin y el precio se calculan automáticamente según el plan.
           </p>
+
           <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
             <Button variant="ghost" type="button" onClick={() => setModal(false)}>Cancelar</Button>
             <Button type="submit" loading={saving}>Crear membresía</Button>

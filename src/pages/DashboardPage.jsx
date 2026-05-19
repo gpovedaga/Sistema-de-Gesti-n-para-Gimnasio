@@ -122,11 +122,6 @@ export default function DashboardPage() {
 
       <div className="dash-info-grid">
         <div className="dash-info-card">
-          <h3>Sistema de Gestión</h3>
-          <p>Universidad El Bosque · Bases de Datos 1</p>
-          <p style={{ marginTop: 8 }}>Gestiona miembros, membresías, clases, reservas, salas y mantenimientos desde un solo lugar.</p>
-        </div>
-        <div className="dash-info-card">
           <h3>🔐 Tu rol: <span style={{ color: 'var(--accent)' }}>{user?.cargo?.replace(/_/g, ' ')}</span></h3>
           <p>Tienes acceso a los módulos correspondientes a tu cargo. Navega usando el menú lateral.</p>
         </div>

@@ -525,11 +525,12 @@
   gap: 80px;
   align-items: center;
 }
-.about-text {}
+
 .section-tag--left {
   display: block;
   text-align: left;
 }
+
 .about-desc {
   font-size: 16px;
   color: var(--text-secondary);

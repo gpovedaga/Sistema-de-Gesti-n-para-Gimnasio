@@ -31,10 +31,11 @@ const SLIDES = [
 ]
 
 const PLANS = [
-  { name: 'MENSUAL',    price: '$120.000', days: 30,  color: '#3b82f6', features: ['Acceso total al gimnasio', 'Clases grupales', 'Vestuarios'] },
-  { name: 'TRIMESTRAL', price: '$320.000', days: 90,  color: '#1a4db5', features: ['Todo del mensual', 'Descuento del 11%', 'Reserva prioritaria'], popular: true },
-  { name: 'SEMESTRAL',  price: '$550.000', days: 180, color: '#22c55e', features: ['Todo del trimestral', 'Descuento del 23%', 'Asesoría nutricional'] },
-  { name: 'ANUAL',      price: '$900.000', days: 365, color: '#8b5cf6', features: ['Todo el semestral', 'Descuento del 37%', 'Acceso VIP'] },
+  { name: 'MENSUAL',    price: '$80.000', days: 30,  color: '#3b82f6', features: ['Acceso total al gimnasio', 'Clases grupales', 'Vestuarios'] },
+  { name: 'TRIMESTRAL', price: '$210.000', days: 90,  color: '#1a4db5', features: ['Todo del mensual', 'Descuento del 11%', 'Reserva prioritaria'], popular: true },
+  { name: 'SEMESTRAL',  price: '$380.000', days: 180, color: '#22c55e', features: ['Todo del trimestral', 'Descuento del 23%', 'Asesoría nutricional'] },
+  { name: 'ANUAL',      price: '$650.000', days: 365, color: '#8b5cf6', features: ['Todo el semestral', 'Descuento del 37%', 'Acceso VIP'] },
+  { name: 'ESTUDIANTE', price: '$60.000', days: 30, color: '#a9f610', features: ['Acceso total al gimnasio', 'Clases grupales', 'Vestuarios'] },
 ]
 
 const CLASSES = [

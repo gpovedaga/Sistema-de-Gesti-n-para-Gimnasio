@@ -1,349 +1,291 @@
-.register-root {
-  min-height: 100vh;
-  background: var(--bg-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  position: relative;
-  overflow: hidden;
-}
+import { useState, useEffect } from 'react'
+import { useAuth } from '../context/AuthContext'
+import { claseService, membresiaService, reservaService } from '../services/api'
+import { LogOut, Dumbbell, CreditCard, Calendar, Clock, Users } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import './PortalMiembroPage.css'
 
-.register-root::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0;
-  width: 6px;
-  height: 100%;
-  background: var(--accent);
-}
+export default function PortalMiembroPage() {
+    const { user, logout } = useAuth()
+    const navigate = useNavigate()
 
-.register-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 48px 44px;
-  width: 100%;
-  max-width: 560px;
-  animation: fadeUp 0.5s ease forwards;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.08);
-  position: relative;
-  z-index: 1;
-}
+    const [clases, setClases] = useState([])
+    const [membresia, setMembresia] = useState(null)
+    const [reservas, setReservas] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [tab, setTab] = useState('clases') 
+    const [msg, setMsg] = useState('')
+    const doc = user?.documento
 
-.register-logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 36px;
-  cursor: pointer;
-}
-.register-logo-icon {
-  width: 42px; height: 42px;
-  background: var(--accent);
-  border-radius: var(--radius-md);
-  display: flex; align-items: center; justify-content: center;
-  color: white;
-}
-.register-logo-text {
-  font-family: var(--font-display);
-  font-size: 28px;
-  letter-spacing: 4px;
-  color: var(--text-primary);
-}
-.register-logo-text span { color: var(--accent); }
 
-.register-steps {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  margin-bottom: 36px;
-}
+    useEffect(() => { fetchAll() }, [])
 
-.step-item {
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
+    const fetchAll = async () => {
+        try {
+            const [c, r] = await Promise.allSettled([
+                claseService.activas(),
+                reservaService.porMiembro(doc), 
+            ])
+            setClases(c.status === 'fulfilled' ? c.value.data : [])
+            setReservas(r.status === 'fulfilled' ? r.value.data : [])
+        } finally {
+            setLoading(false)
+        }
+    }
 
-.step-bubble {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-heading);
-  font-size: 12px;
-  font-weight: 700;
-  flex-shrink: 0;
-  transition: all 0.3s;
-}
-.step-bubble--done {
-  background: var(--accent);
-  color: white;
-  border: none;
-}
-.step-bubble--active {
-  background: var(--accent);
-  color: white;
-  border: none;
-  box-shadow: 0 0 0 4px var(--accent-glow);
-}
-.step-bubble--pending {
-  background: var(--bg-secondary);
-  color: var(--text-muted);
-  border: 1.5px solid var(--border);
-}
+    const fetchMembresia = async () => {
+        try {
+            const res = await membresiaService.porMiembro(doc) 
+            const lista = Array.isArray(res.data) ? res.data : []
+            setMembresia(lista.find(m => m.estado === 'activa') || null)
+        } catch { }
+    }
 
-.step-label {
-  font-family: var(--font-heading);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  margin-left: 8px;
-  white-space: nowrap;
-}
-.step-label--active { color: var(--accent); }
-.step-label--done { color: var(--text-secondary); }
-.step-label--pending { color: var(--text-muted); }
 
-.step-line {
-  flex: 1;
-  height: 2px;
-  margin: 0 8px;
-  border-radius: 2px;
-  transition: background 0.3s;
-}
-.step-line--done { background: var(--accent); }
-.step-line--pending { background: var(--border); }
+    const reservar = async (idClase) => {
+        setMsg('')
+        try {
+            await reservaService.crear({
+                claseIdClase: idClase,
+                miembroDocumento: doc,
+                fechaReserva: new Date().toISOString().split('T')[0],
+                estado: 'confirmada'
+            })
+            setMsg('OK Reserva realizada exitosamente.')
+            fetchAll()
+        } catch (e) {
+            setMsg((e.response?.data || 'Error al reservar.'))
+        }
+    }
 
-.register-heading {
-  font-family: var(--font-display);
-  font-size: 36px;
-  letter-spacing: 2px;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-  line-height: 1;
-}
-.register-sub {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-bottom: 28px;
-  line-height: 1.6;
-}
+    const cancelar = async (idReserva, docMiembro) => {
+        try {
+            await reservaService.cambiarEstado(idReserva, docMiembro, 'cancelada')
+            setMsg('OK Reserva cancelada.')
+            fetchAll()
+        } catch {
+            setMsg('Error al cancelar.')
+        }
+    }
 
-.register-error {
-  background: rgba(220,38,38,0.07);
-  border: 1px solid rgba(220,38,38,0.2);
-  border-left: 3px solid #dc2626;
-  color: #dc2626;
-  border-radius: var(--radius-sm);
-  padding: 10px 14px;
-  font-size: 13px;
-  margin-bottom: 20px;
-}
+    const handleLogout = () => { logout(); navigate('/login') }
 
-.register-form {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
+    const hora = new Date().getHours()
+    const saludo = hora < 12 ? 'Buenos días' : hora < 18 ? 'Buenas tardes' : 'Buenas noches'
 
-.register-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.register-field label {
-  font-family: var(--font-heading);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-}
-.register-field input,
-.register-field select {
-  background: var(--bg-secondary);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 11px 14px;
-  font-size: 14px;
-  font-family: var(--font-body);
-  color: var(--text-primary);
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  width: 100%;
-}
-.register-field input:focus,
-.register-field select:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-glow);
-  background: var(--bg-card);
-}
-.register-field input::placeholder { color: var(--text-muted); }
+    const DIAS = { lunes: 'Lun', martes: 'Mar', miercoles: 'Mié', jueves: 'Jue', viernes: 'Vie', sabado: 'Sáb', domingo: 'Dom' }
+    const NIVEL = { basico: 'Básico', intermedio: 'Intermedio', avanzado: 'Avanzado' }
 
-.register-hint {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
+    const TABS = [
+        { id: 'clases', label: 'Clases disponibles', icon: Dumbbell },
+        { id: 'reservas', label: 'Mis reservas', icon: Calendar },
+        { id: 'membresia', label: 'Mi membresía', icon: CreditCard },
+    ]
 
-.pass-wrap { position: relative; }
-.pass-wrap input { padding-right: 44px; }
-.pass-eye {
-  position: absolute;
-  right: 12px; top: 50%;
-  transform: translateY(-50%);
-  background: none; border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  display: flex; align-items: center;
-  transition: color 0.2s;
-}
-.pass-eye:hover { color: var(--accent); }
+    const estadoChipClass = (estado) => {
+        const map = { confirmada: 'confirmada', asistida: 'asistida', ausente: 'ausente', cancelada: 'cancelada' }
+        return `portal-estado-chip ${map[estado] || ''}`
+    }
 
-.register-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 8px;
-}
-.register-btn-back {
-  padding: 12px 20px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-heading);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  background: transparent;
-  border: 1.5px solid var(--border-bright);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex; align-items: center; gap: 6px;
-}
-.register-btn-back:hover { background: var(--bg-hover); color: var(--text-primary); }
+    return (
+        <div className="portal-wrapper">
 
-.register-btn-next,
-.register-btn-submit {
-  flex: 1;
-  padding: 13px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-heading);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  background: var(--accent);
-  color: white;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-}
-.register-btn-next:hover,
-.register-btn-submit:hover:not(:disabled) {
-  background: var(--accent-dim);
-  box-shadow: 0 4px 20px var(--accent-glow);
-  transform: translateY(-1px);
-}
-.register-btn-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+            <header className="portal-header">
+                <div className="portal-header-brand">
+                    <div className="portal-header-icon">
+                        <Dumbbell size={20} color="#fff" />
+                    </div>
+                    <div>
+                        <div className="portal-header-title">Portal de Miembros</div>
+                        <div className="portal-header-saludo">
+                            {saludo}, <span>{user?.nombre?.split(' ')[0]}</span>
+                        </div>
+                    </div>
+                </div>
 
-.reg-spinner {
-  width: 16px; height: 16px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
+                <button className="portal-logout-btn" onClick={handleLogout}>
+                    <LogOut size={14} /> Salir
+                </button>
+            </header>
 
-.register-success {
-  text-align: center;
-  padding: 20px 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-.success-icon {
-  width: 64px; height: 64px;
-  background: rgba(22,163,74,0.12);
-  border: 2px solid rgba(22,163,74,0.3);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--success);
-}
-.register-success h2 {
-  font-family: var(--font-display);
-  font-size: 40px;
-  letter-spacing: 2px;
-  color: var(--text-primary);
-}
-.register-success p {
-  font-size: 14px;
-  color: var(--text-secondary);
-  line-height: 1.7;
-}
+            <div className="portal-tabs">
+                {TABS.map(({ id, label, icon: Icon }) => (
+                    <button
+                        key={id}
+                        className={`portal-tab-btn${tab === id ? ' active' : ''}`}
+                        onClick={() => setTab(id)}
+                    >
+                        <Icon size={14} />
+                        {label}
+                    </button>
+                ))}
+            </div>
 
-.confirm-summary {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-.confirm-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-.confirm-label {
-  font-family: var(--font-heading);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  flex-shrink: 0;
-}
-.confirm-value {
-  font-size: 14px;
-  color: var(--text-primary);
-  text-align: right;
-  word-break: break-word;
-}
+            <div className="portal-content">
 
-.register-login-link {
-  text-align: center;
-  margin-top: 20px;
-  font-size: 13px;
-  color: var(--text-muted);
-}
-.register-login-link a { color: var(--accent); font-weight: 600; }
+                {msg && (
+                    <div className={`portal-msg ${msg.startsWith('OK') ? 'success' : 'error'}`}>
+                        {msg}
+                    </div>
+                )}
 
-.minor-section {
-  background: rgba(245,158,11,0.07);
-  border: 1px solid rgba(245,158,11,0.2);
-  border-left: 3px solid var(--warning);
-  border-radius: var(--radius-sm);
-  padding: 16px;
-  margin-top: 4px;
-}
-.minor-section-title {
-  font-family: var(--font-heading);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--warning);
-  margin-bottom: 14px;
-}
+                {loading ? (
+                    <div className="portal-loading">Cargando...</div>
+                ) : (
+                    <>
+                        {tab === 'clases' && (
+                            <div>
+                                <h2 className="portal-section-title">Clases disponibles</h2>
+                                <p className="portal-section-subtitle">Reserva tu lugar en cualquier clase activa</p>
 
-@media (max-width: 600px) {
-  .register-card { padding: 32px 24px; }
-  .step-label { display: none; }
+                                {clases.length === 0 ? (
+                                    <div className="portal-empty">
+                                        <Dumbbell size={40} />
+                                        <p>No hay clases activas por el momento.</p>
+                                    </div>
+                                ) : (
+                                    <div className="portal-clases-grid">
+                                        {clases.map(c => (
+                                            <div key={c.idClase} className="portal-clase-card">
+                                                <div className="portal-clase-card-header">
+                                                    <div>
+                                                        <div className="portal-clase-nombre">{c.nombreClase}</div>
+                                                        <div className="portal-clase-disciplina">{c.disciplina}</div>
+                                                    </div>
+                                                    <span className={`portal-badge ${c.nivelDificultad}`}>
+                                                        {NIVEL[c.nivelDificultad] || c.nivelDificultad}
+                                                    </span>
+                                                </div>
+
+                                                <div className="portal-clase-meta">
+                                                    <span>
+                                                        <Clock size={13} />
+                                                        {DIAS[c.diaSemana] || c.diaSemana} a las {c.horaInicio} · {c.duracionMinutos} min
+                                                    </span>
+                                                    <span>
+                                                        <Users size={13} />
+                                                        Instructor: {c.instructorNombre}
+                                                    </span>
+                                                    <span>
+                                                        <Dumbbell size={13} />
+                                                        Sala: {c.salaNombre} · Cupos: {c.capacidadMax}
+                                                    </span>
+                                                </div>
+
+                                                <button
+                                                    className="portal-btn-reservar"
+                                                    onClick={() => reservar(c.idClase)}
+                                                >
+                                                    Reservar clase
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {tab === 'reservas' && (
+                            <div>
+                                <h2 className="portal-section-title">Mis reservas</h2>
+                                <p className="portal-section-subtitle">Historial y estado de tus inscripciones</p>
+
+                                {reservas.length === 0 ? (
+                                    <div className="portal-empty">
+                                        <Calendar size={40} />
+                                        <p>No tienes reservas aún.</p>
+                                    </div>
+                                ) : (
+                                    <div className="portal-reservas-list">
+                                        {reservas.map((r, i) => (
+                                            <div key={i} className="portal-reserva-item">
+                                                <div className="portal-reserva-info">
+                                                    <div className="portal-reserva-clase">
+                                                        {r.claseNombre || `Clase #${r.claseIdClase}`}
+                                                    </div>
+                                                    <div className="portal-reserva-fecha">
+                                                        {r.fechaReserva
+                                                            ? new Date(r.fechaReserva).toLocaleDateString('es-CO')
+                                                            : '—'}
+                                                    </div>
+                                                    <div className="portal-reserva-estado">
+                                                        <span className={estadoChipClass(r.estado)}>
+                                                            {r.estado}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {r.estado === 'confirmada' && (
+                                                    <button
+                                                        className="portal-btn-cancelar"
+                                                        onClick={() => cancelar(r.idReserva, r.miembroDocumento)}
+                                                    >
+                                                        Cancelar
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {tab === 'membresia' && (
+                            <div>
+                                <h2 className="portal-section-title">Mi membresía</h2>
+                                <p className="portal-section-subtitle">Detalles de tu plan activo</p>
+
+                                {!membresia ? (
+                                    <div className="portal-no-membresia">
+                                        <div className="portal-no-membresia-icon">
+                                            <CreditCard size={48} />
+                                        </div>
+                                        <div className="portal-no-membresia-title">Sin membresía activa</div>
+                                        <div className="portal-no-membresia-hint">
+                                            Acércate a recepción para contratar un plan.
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="portal-membresia-card">
+                                        <div className="portal-membresia-card-header">
+                                            <div className="portal-membresia-icon">
+                                                <CreditCard size={24} color="var(--accent)" />
+                                            </div>
+                                            <div>
+                                                <div className="portal-membresia-plan">{membresia.planNombre}</div>
+                                                <div className="portal-membresia-status">Activa</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="portal-membresia-divider" />
+
+                                        <div className="portal-membresia-rows">
+                                            <div className="portal-membresia-row">
+                                                <span className="portal-membresia-row-label">Inicio</span>
+                                                <span className="portal-membresia-row-value">
+                                                    {new Date(membresia.fechaInicio).toLocaleDateString('es-CO')}
+                                                </span>
+                                            </div>
+                                            <div className="portal-membresia-row">
+                                                <span className="portal-membresia-row-label">Vencimiento</span>
+                                                <span className="portal-membresia-row-value vence">
+                                                    {new Date(membresia.fechaFin).toLocaleDateString('es-CO')}
+                                                </span>
+                                            </div>
+                                            <div className="portal-membresia-row">
+                                                <span className="portal-membresia-row-label">Valor pagado</span>
+                                                <span className="portal-membresia-row-value precio">
+                                                    ${Number(membresia.precioInscrito).toLocaleString('es-CO')}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+        </div>
+    )
 }
